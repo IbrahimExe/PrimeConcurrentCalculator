@@ -3,6 +3,12 @@
 
 #include <iostream>
 #include <chrono>
+#include <vector>
+#include <thread>
+#include <mutex>
+
+std::mutex primeCountMutex;
+long long totalPrimes = 0;
 
 bool IsPrime(long long number)
 {
@@ -32,19 +38,20 @@ bool IsPrime(long long number)
     return true;
 }
 
-long long CountPrimes(long long start, long long end)
+void CalculatePrimesThread(long long start, long long end)
 {
-    long long primeCount = 0;
+    long long localPrimeCount = 0;
 
     for (long long number = start; number <= end; number++)
     {
         if (IsPrime(number))
         {
-            primeCount++;
+            localPrimeCount++;
         }
     }
 
-    return primeCount;
+    std::lock_guard<std::mutex> lock(primeCountMutex);
+    totalPrimes += localPrimeCount;
 }
 
 int main()
@@ -62,27 +69,34 @@ int main()
         return 1;
     }
 
-    long long chunkSize = limit / 4;
-    std::cout << "\nSplitting range into 4 chunks:\n";
+    const int threadCount = 4;
+    long long chunkSize = limit / threadCount;
 
-    for (int i = 0; i < 4; i++)
-    {
-        long long start = i * chunkSize + 2;
-        long long end = (i == 3) ? limit : (i + 1) * chunkSize + 1;
+    totalPrimes = 0;
 
-        std::cout << "Chunk " << i + 1 << ": "
-            << start << " - " << end << "\n";
-    }
+    std::vector<std::thread> threads;
 
     auto startTime = std::chrono::high_resolution_clock::now();
 
-        long long primeCount = CountPrimes(2, limit);
+    for (int i = 0; i < threadCount; i++)
+    {
+        long long start = (i == 0) ? 2 : i * chunkSize + 1;
+        long long end = (i == threadCount - 1) ? limit : (i + 1) * chunkSize;
+
+        threads.emplace_back(CalculatePrimesThread, start, end);
+    }
+
+    for (std::thread& thread : threads)
+    {
+        thread.join();
+    }
 
     auto endTime = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> elapsedTime = endTime - startTime;
 
-    std::cout << "\nPrimes found: " << primeCount << "\n";
+    std::cout << "\nThreads used: " << threadCount << "\n";
+    std::cout << "Primes found: " << totalPrimes << "\n";
     std::cout << "Time taken: " << elapsedTime.count() << " ms\n";
 
     return 0;
