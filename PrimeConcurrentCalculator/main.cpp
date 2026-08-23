@@ -60,7 +60,7 @@ void CalculatePrimesThread(long long start, long long end)
     AddToTotal(localPrimeCount);
 }
 
-void RunCalculation(long long limit, int threadCount)
+double RunCalculation(long long limit, int threadCount)
 {
     totalPrimes = 0;
 
@@ -104,9 +104,7 @@ void RunCalculation(long long limit, int threadCount)
 
     std::chrono::duration<double, std::milli> elapsedTime = endTime - startTime;
 
-    std::cout << "Threads: " << threadCount
-        << " | Primes: " << totalPrimes
-        << " | Time: " << elapsedTime.count() << " ms\n";
+    return elapsedTime.count();
 }
 
 
@@ -131,16 +129,20 @@ int main()
         return 1;
     }
 
-    std::cout << "\nRunning benchmark...\n\n";
+    int threadCounts[] = { 1,2,4,8 };
 
-    int threadCounts[] = { 1, 2, 4, 8 };
+    std::cout << "\nRunning benchmark...\n\n";
 
     for (int threadCount : threadCounts)
     {
-        RunCalculation(limit, threadCount);
+        double elapsedTime = RunCalculation(limit, threadCount);
+
+        std::cout << "Threads: " << threadCount
+            << " | Primes: " << totalPrimes
+            << " | Time: " << elapsedTime << " ms\n";
     }
 
-    std::cout << "\nDone.\n";
+    std::cout << "Benchmark complete.\n";
 
     return 0;
 }
