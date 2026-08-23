@@ -60,54 +60,13 @@ void CalculatePrimesThread(long long start, long long end)
     AddToTotal(localPrimeCount);
 }
 
-
-int main()
+void RunCalculation(long long limit, int threadCount)
 {
-    long long limit;
-    int threadCount;
-
-    std::cout << "Prime Calculator\n";
-    std::cout << "================\n\n";
-
-    std::cout << "Enter the upper limit: ";
-    
-    if (!(std::cin >> limit))
-    {
-        std::cout << "That's not a valid number!\n";
-        return 1;
-    }
-
-    if (limit < 2)
-    {
-        std::cout << "number must be greater than or equal to 2!\n";
-        return 1;
-    }
-
-    std::cout << "enter the number of threads: ";
-    
-    if (!(std::cin >> threadCount))
-    {
-        std::cout << "That's not a valid number of threads!\n";
-        return 1;
-    }
-
-    if (threadCount < 1)
-    {
-        std::cout << "need at least 1 thread!\n";
-        return 1;
-    }
-
-    long long numbersToProcess = limit - 1;
-
-    if (threadCount > numbersToProcess)
-    {
-        threadCount = static_cast<int>(numbersToProcess);
-    }
-
     totalPrimes = 0;
 
     std::vector<std::thread> threads;
 
+    long long numbersToProcess = limit - 1;
     long long chunkSize = numbersToProcess / threadCount;
     long long remainder = numbersToProcess % threadCount;
 
@@ -145,12 +104,43 @@ int main()
 
     std::chrono::duration<double, std::milli> elapsedTime = endTime - startTime;
 
-    std::cout << "\nResults\n";
-    std::cout << "-------\n";
-    std::cout << "Range: 2 - " << limit << "\n";
-    std::cout << "Threads used: " << threadCount << "\n";
-    std::cout << "Primes found: " << totalPrimes << "\n";
-    std::cout << "Time taken: " << elapsedTime.count() << " ms\n";
+    std::cout << "Threads: " << threadCount
+        << " | Primes: " << totalPrimes
+        << " | Time: " << elapsedTime.count() << " ms\n";
+}
+
+
+int main()
+{
+    long long limit;
+
+    std::cout << "Prime Calculator\n";
+    std::cout << "================\n\n";
+
+    std::cout << "Enter the upper limit: ";
+
+    if (!(std::cin >> limit))
+    {
+        std::cout << "That's not a valid number!\n";
+        return 1;
+    }
+
+    if (limit < 2)
+    {
+        std::cout << "number must be greater than or equal to 2!\n";
+        return 1;
+    }
+
+    std::cout << "\nRunning benchmark...\n\n";
+
+    int threadCounts[] = { 1, 2, 4, 8 };
+
+    for (int threadCount : threadCounts)
+    {
+        RunCalculation(limit, threadCount);
+    }
+
+    std::cout << "\nDone.\n";
 
     return 0;
 }
