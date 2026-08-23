@@ -2,6 +2,7 @@
 //
 
 #include <iostream>
+#include <chrono>
 
 bool IsPrime(long long number)
 {
@@ -38,7 +39,9 @@ long long CountPrimes(long long start, long long end)
     for (long long number = start; number <= end; number++)
     {
         if (IsPrime(number))
+        {
             primeCount++;
+        }
     }
 
     return primeCount;
@@ -59,9 +62,16 @@ int main()
         return 1;
     }
 
+    auto startTime = std::chrono::high_resolution_clock::now();
+
     long long primeCount = CountPrimes(2, limit);
 
+    auto endTime = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> elapsedTime = endTime - startTime;
+
     std::cout << "\nPrimes found: " << primeCount << "\n";
+    std::cout << "Time taken: " << elapsedTime.count() << " ms\n";
 
     return 0;
 }
