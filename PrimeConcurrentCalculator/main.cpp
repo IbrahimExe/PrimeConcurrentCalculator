@@ -6,6 +6,7 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <limits>
 
 std::mutex primeCountMutex;
 long long totalPrimes = 0;
@@ -38,6 +39,12 @@ bool IsPrime(long long number)
     return true;
 }
 
+void AddToTotal(long long primeCount)
+{
+    std::lock_guard<std::mutex> lock(primeCountMutex);
+    totalPrimes += primeCount;
+}
+
 void CalculatePrimesThread(long long start, long long end)
 {
     long long localPrimeCount = 0;
@@ -50,9 +57,9 @@ void CalculatePrimesThread(long long start, long long end)
         }
     }
 
-    std::lock_guard<std::mutex> lock(primeCountMutex);
-    totalPrimes += localPrimeCount;
+    AddToTotal(localPrimeCount);
 }
+
 
 int main()
 {
@@ -61,8 +68,14 @@ int main()
 
     std::cout << "Prime Calculator\n";
     std::cout << "================\n\n";
+
     std::cout << "Enter the upper limit: ";
-    std::cin >> limit;
+    
+    if (!(std::cin >> limit))
+    {
+        std::cout << "That's not a valid number!\n";
+        return 1;
+    }
 
     if (limit < 2)
     {
@@ -71,7 +84,12 @@ int main()
     }
 
     std::cout << "enter the number of threads: ";
-    std::cin >> threadCount;
+    
+    if (!(std::cin >> threadCount))
+    {
+        std::cout << "That's not a valid number of threads!\n";
+        return 1;
+    }
 
     if (threadCount < 1)
     {
@@ -127,7 +145,10 @@ int main()
 
     std::chrono::duration<double, std::milli> elapsedTime = endTime - startTime;
 
-    std::cout << "\nThreads used: " << threadCount << "\n";
+    std::cout << "\nResults\n";
+    std::cout << "-------\n";
+    std::cout << "Range: 2 - " << limit << "\n";
+    std::cout << "Threads used: " << threadCount << "\n";
     std::cout << "Primes found: " << totalPrimes << "\n";
     std::cout << "Time taken: " << elapsedTime.count() << " ms\n";
 
