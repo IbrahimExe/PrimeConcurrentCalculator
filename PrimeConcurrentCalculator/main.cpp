@@ -57,6 +57,7 @@ void CalculatePrimesThread(long long start, long long end)
 int main()
 {
     long long limit;
+    int threadCount;
 
     std::cout << "Prime Calculator\n";
     std::cout << "================\n\n";
@@ -69,21 +70,52 @@ int main()
         return 1;
     }
 
-    const int threadCount = 4;
-    long long chunkSize = limit / threadCount;
+    std::cout << "enter the number of threads: ";
+    std::cin >> threadCount;
+
+    if (threadCount < 1)
+    {
+        std::cout << "need at least 1 thread!\n";
+        return 1;
+    }
+
+    long long numbersToProcess = limit - 1;
+
+    if (threadCount > numbersToProcess)
+    {
+        threadCount = static_cast<int>(numbersToProcess);
+    }
 
     totalPrimes = 0;
 
     std::vector<std::thread> threads;
 
+    long long chunkSize = numbersToProcess / threadCount;
+    long long remainder = numbersToProcess % threadCount;
+
+    long long currentStart = 2;
+
     auto startTime = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < threadCount; i++)
     {
-        long long start = (i == 0) ? 2 : i * chunkSize + 1;
-        long long end = (i == threadCount - 1) ? limit : (i + 1) * chunkSize;
+        long long currentChunkSize = chunkSize;
 
-        threads.emplace_back(CalculatePrimesThread, start, end);
+        if (i < remainder)
+        {
+            currentChunkSize++;
+        }
+
+        long long currentEnd = currentStart + currentChunkSize - 1;
+
+        threads.emplace_back
+        (
+            CalculatePrimesThread,
+            currentStart,
+            currentEnd
+        );
+
+        currentStart = currentEnd + 1;
     }
 
     for (std::thread& thread : threads)
