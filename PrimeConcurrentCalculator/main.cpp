@@ -62,9 +62,21 @@ int main()
         return 1;
     }
 
+    long long chunkSize = limit / 4;
+    std::cout << "\nSplitting range into 4 chunks:\n";
+
+    for (int i = 0; i < 4; i++)
+    {
+        long long start = i * chunkSize + 2;
+        long long end = (i == 3) ? limit : (i + 1) * chunkSize + 1;
+
+        std::cout << "Chunk " << i + 1 << ": "
+            << start << " - " << end << "\n";
+    }
+
     auto startTime = std::chrono::high_resolution_clock::now();
 
-    long long primeCount = CountPrimes(2, limit);
+        long long primeCount = CountPrimes(2, limit);
 
     auto endTime = std::chrono::high_resolution_clock::now();
 
