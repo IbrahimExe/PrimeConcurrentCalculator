@@ -7,6 +7,7 @@
 #include <thread>
 #include <mutex>
 #include <limits>
+#include <iomanip> 
 
 std::mutex primeCountMutex;
 long long totalPrimes = 0;
@@ -111,6 +112,7 @@ double RunCalculation(long long limit, int threadCount)
 int main()
 {
     long long limit;
+    int requestedThreadCount;
 
     std::cout << "Prime Calculator\n";
     std::cout << "================\n\n";
@@ -129,20 +131,86 @@ int main()
         return 1;
     }
 
-    int threadCounts[] = { 1,2,4,8 };
+    std::cout << "Enter the number of threads: ";
 
-    std::cout << "\nRunning benchmark...\n\n";
-
-    for (int threadCount : threadCounts)
+    if (!(std::cin >> requestedThreadCount))
     {
-        double elapsedTime = RunCalculation(limit, threadCount);
-
-        std::cout << "Threads: " << threadCount
-            << " | Primes: " << totalPrimes
-            << " | Time: " << elapsedTime << " ms\n";
+        std::cout << "that's not a valid number of threads!\n";
+        return 1;
     }
 
-    std::cout << "Benchmark complete.\n";
+    if (requestedThreadCount < 1)
+    {
+        std::cout << "please enter at least 1 thread!\n";
+        return 1;
+    }
+
+    long long numbersToProcess = limit - 1;
+
+    if (requestedThreadCount > numbersToProcess)
+    {
+        requestedThreadCount = static_cast<int>(numbersToProcess);
+    }
+
+    unsigned int hardwareThreads = std::thread::hardware_concurrency();
+
+    std::cout << "\nSystem information\n";
+    std::cout << "------------------\n";
+
+    if (hardwareThreads > 0)
+    {
+        std::cout << "Hardware threads detected: " << hardwareThreads << "\n";
+    }
+    else
+    {
+        std::cout << "Hardware threads detected: unavailable\n";
+    }
+
+    std::cout << "Range: 2 - " << limit << "\n";
+    std::cout << "Requested threads: " << requestedThreadCount << "\n";
+
+    const int benchmarkRuns = 3;
+
+    double totalTime = 0.0;
+    double bestTime = 0.0;
+    long long primeCount = 0;
+
+    std::cout << "\nRunning benchmark...\n";
+    std::cout << "Each configuration will run "
+        << benchmarkRuns << " times.\n\n";
+
+    for (int run = 0; run < benchmarkRuns; run++)
+    {
+        double elapsedTime = RunCalculation(limit, requestedThreadCount);
+
+        totalTime += elapsedTime;
+        primeCount = totalPrimes;
+
+        if (run == 0 || elapsedTime < bestTime)
+        {
+            bestTime = elapsedTime;
+        }
+
+        std::cout << "Run " << run + 1
+            << ": " << std::fixed << std::setprecision(2)
+            << elapsedTime << " ms\n";
+    }
+
+    double averageTime = totalTime / benchmarkRuns;
+
+    std::cout << "\nResults\n";
+    std::cout << "-------\n";
+    std::cout << "Primes found: " << primeCount << "\n";
+    std::cout << "Average time: " << std::fixed
+        << std::setprecision(2) << averageTime << " ms\n";
+    std::cout << "Best time: " << bestTime << " ms\n";
+
+    if (primeCount == 0)
+    {
+        std::cout << "No primes were found.\n";
+    }
+
+    std::cout << "\nDone. The CPU may now recover.\n";
 
     return 0;
 }
