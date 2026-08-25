@@ -1,6 +1,8 @@
 // PrimeConcurrentCalculator.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+// C++ Implementation of a Prime Number Calculator
+
 #include <iostream>
 #include <chrono>
 #include <vector>
